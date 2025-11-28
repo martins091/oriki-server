@@ -1,5 +1,7 @@
 // utils/emailService.js
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const sendTicketEmail = async (
   email,
@@ -8,28 +10,23 @@ export const sendTicketEmail = async (
   attachments = []
 ) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.sendgrid.net",
-      port: 587,
-      auth: {
-        user: "apikey",
-        pass: process.env.SENDGRID_API_KEY,
-      },
-    });
-
-    const mailOptions = {
-      from: process.env.SENDGRID_VERIFIED_SENDER,
+    const msg = {
       to: email,
+      from: process.env.SENDGRID_VERIFIED_SENDER, // must be verified in SendGrid
       subject,
       html: htmlContent,
       attachments,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent:", info.response);
+    await sgMail.send(msg);
+
+    console.log("Email sent successfully to", email);
     return true;
   } catch (error) {
     console.error("Email error:", error);
+    if (error.response) {
+      console.error(error.response.body);
+    }
     return false;
   }
 };
