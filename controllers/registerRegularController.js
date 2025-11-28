@@ -1,32 +1,32 @@
-const Seat = require("../models/Seat");
-const Guest = require("../models/Guest");
-const { v4: uuidv4 } = require("uuid");
-const { sendConfirmationEmail } = require("../utils/emailService");
-const { generateQRCode } = require("../utils/qrService");
+import Seat from "../models/Seat.js";
+import Guest from "../models/Guest.js";
+import { v4 as uuidv4 } from "uuid";
+import { sendTicketEmail } from "../utils/emailService.js";
+import { generateQRCode } from "../utils/qrService.js";
+import { ticketTemplate } from "../utils/templates/ticketTemplate.js";
 
-exports.registerRegular = async (req, res) => {
+export const registerRegular = async (req, res) => {
   try {
     const { fullName, email, phone, gender, dob, numberOfSeats } = req.body;
 
-    // 1. Find available regular seats
+    // Find available regular seats
     const seats = await Seat.find({
       category: "REGULAR",
       assigned: false,
     }).limit(numberOfSeats);
 
     if (seats.length < numberOfSeats) {
-      return res.status(400).json({
-        message: "Not enough regular seats available.",
-      });
+      return res
+        .status(400)
+        .json({ message: "Not enough regular seats available." });
     }
 
     let registeredGuests = [];
 
     for (let seat of seats) {
-      // 2. Generate unique QR string
       const qrString = uuidv4();
 
-      // 3. Create guest
+      // Create guest
       const guest = await Guest.create({
         fullName,
         email,
@@ -38,14 +38,24 @@ exports.registerRegular = async (req, res) => {
         qrString,
       });
 
-      // 4. Mark seat as assigned
+      // Mark seat as assigned
       seat.assigned = true;
       seat.assignedTo = guest._id;
       await seat.save();
 
-      // 5. Generate QR code and send email
-      const qrCodeDataURL = await generateQRCode(guest.qrString);
-      await sendConfirmationEmail(guest, qrCodeDataURL);
+      // Generate QR code
+      const qrCodeDataURL = await generateQRCode(qrString);
+
+      // Build HTML (logo is hardcoded in template now)
+      const html = ticketTemplate({
+        fullName: guest.fullName,
+        seatNumber: guest.seatNumber,
+        category: guest.category,
+        qrCode: qrCodeDataURL,
+      });
+
+      // Send ticket email
+      await sendTicketEmail(guest.email, "Your ÒRIKÌ 2025 Ticket", html);
 
       registeredGuests.push(guest);
     }
@@ -53,7 +63,6 @@ exports.registerRegular = async (req, res) => {
     return res.json({
       success: true,
       message: "Registration successful.",
-      seats: registeredGuests.map((g) => g.seatNumber),
       guests: registeredGuests,
     });
   } catch (error) {
