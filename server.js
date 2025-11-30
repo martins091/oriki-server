@@ -9,7 +9,8 @@ const app = express();
 // ✅ Update CORS
 const allowedOrigins = [
   "http://localhost:5173", // local dev
-  "https://rik-48x05sreo-martins-projects-2c1566a9.vercel.app", // your Vercel frontend
+  "https://rik-48x05sreo-martins-projects-2c1566a9.vercel.app",
+  "https://rik-five.vercel.app/", // your Vercel frontend
 ];
 
 app.use(
