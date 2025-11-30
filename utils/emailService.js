@@ -7,12 +7,25 @@ export const sendTicketEmail = async (
   email,
   subject,
   htmlContent,
-  attachments = []
+  qrCodeDataURL // Now accepting QR code data URL directly
 ) => {
   try {
+    // Convert base64 QR code to attachment
+    const base64Data = qrCodeDataURL.split(',')[1]; // Remove the data:image/png;base64, part
+    
+    const attachments = [
+      {
+        content: base64Data,
+        filename: 'qrcode.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'qrcode' // This CID will be referenced in the HTML as src="cid:qrcode"
+      }
+    ];
+
     const msg = {
       to: email,
-      from: process.env.SENDGRID_VERIFIED_SENDER, // must be verified in SendGrid
+      from: process.env.SENDGRID_VERIFIED_SENDER,
       subject,
       html: htmlContent,
       attachments,

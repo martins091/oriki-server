@@ -25,6 +25,7 @@ export const registerRegular = async (req, res) => {
 
     for (let seat of seats) {
       const qrString = uuidv4();
+      console.log("🔹 Generated QR string:", qrString);
 
       // Create guest
       const guest = await Guest.create({
@@ -44,18 +45,34 @@ export const registerRegular = async (req, res) => {
       await seat.save();
 
       // Generate QR code
-      const qrCodeDataURL = await generateQRCode(qrString);
+      console.log("🔄 About to generate QR code...");
+      let qrCodeDataURL;
+      try {
+        qrCodeDataURL = await generateQRCode(qrString);
+        console.log("✅ QR code generated successfully");
+        console.log("📏 QR code length:", qrCodeDataURL.length);
+        console.log("🔍 QR code starts with:", qrCodeDataURL.substring(0, 50));
+        console.log(
+          "❓ Is valid data URL:",
+          qrCodeDataURL.startsWith("data:image/png;base64,")
+        );
+      } catch (qrError) {
+        console.error("❌ QR code generation failed:", qrError);
+        // Fallback: create a simple data URL for testing
+        qrCodeDataURL =
+          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l5ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5PIFEgUiBDT0RFPC90ZXh0Pjwvc3ZnPg==";
+      }
 
-      // Build HTML (logo is hardcoded in template now)
+      // Build HTML - REMOVE qrCode parameter since we're using CID now
       const html = ticketTemplate({
         fullName: guest.fullName,
         seatNumber: guest.seatNumber,
         category: guest.category,
-        qrCode: qrCodeDataURL,
+        // qrCode parameter removed - template will use cid:qrcode instead
       });
 
-      // Send ticket email
-      await sendTicketEmail(guest.email, "Your ÒRIKÌ 2025 Ticket", html);
+      // Send ticket email - PASS QR CODE DATA URL AS PARAMETER
+      await sendTicketEmail(guest.email, "Your ÒRIKÌ 2025 Ticket", html, qrCodeDataURL);
 
       registeredGuests.push(guest);
     }
@@ -66,7 +83,7 @@ export const registerRegular = async (req, res) => {
       guests: registeredGuests,
     });
   } catch (error) {
-    console.error(error);
+    console.error("💥 Main function error:", error);
     return res.status(500).json({ error: error.message });
   }
 };
