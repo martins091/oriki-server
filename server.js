@@ -31,6 +31,8 @@ app.use(
 app.use(express.json());
 
 app.use("/api", require("./routes/registerRegular"));
+app.use("/api/vip", require("./routes/vipAuth"));
+app.use("/api/vip/register", require("./routes/vipRegister"));
 
 // Connect to MongoDB Atlas
 mongoose
