@@ -10,22 +10,47 @@ const GuestSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: ["REGULAR", "VIP", "VVIP"],
-    required: true
+    required: true,
   },
 
   seatNumber: { type: String, required: true },
-
   qrString: { type: String, required: true, unique: true },
+
+  // Add these verification fields:
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+
+  verifiedAt: {
+    type: Date,
+    default: null,
+  },
+
+  verifiedBy: {
+    type: String,
+    default: null,
+  },
 
   checkedIn: {
     type: Boolean,
-    default: false
+    default: false,
+  },
+
+  checkedInAt: {
+    type: Date,
+    default: null,
+  },
+
+  checkedInBy: {
+    type: String,
+    default: null,
   },
 
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 module.exports = mongoose.model("Guest", GuestSchema);
