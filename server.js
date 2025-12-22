@@ -11,6 +11,7 @@ const allowedOrigins = [
   "http://localhost:3000", // local dev
   "https://rik-48x05sreo-martins-projects-2c1566a9.vercel.app",
   "https://v0-tastes-of-culture-website-ic27.vercel.app",
+  "https://v0-tastes-of-culture-website.vercel.app/",
   "https://rik-five.vercel.app", // your Vercel frontend
 ];
 
